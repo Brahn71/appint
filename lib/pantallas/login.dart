@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:animate_do/animate_do.dart';
+import 'usuario.dart'; // Importa tu pantalla de usuarios
 
+class Login extends StatelessWidget {
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
 
-class  login extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -15,7 +18,7 @@ class  login extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            SizedBox(
+            const SizedBox(
               height: 80,
             ),
             Padding(
@@ -33,8 +36,8 @@ class  login extends StatelessWidget {
                     height: 10,
                   ),
                   FadeInUp(
-                      duration:const Duration(milliseconds: 1300),
-                      child:const  Text(
+                      duration: const Duration(milliseconds: 1300),
+                      child: const Text(
                         "Bienvenido",
                         style: TextStyle(color: Colors.white, fontSize: 18,),
                       )),
@@ -77,12 +80,14 @@ class  login extends StatelessWidget {
                                       border: Border(
                                           bottom: BorderSide(
                                               color: Colors.grey.shade200))),
-                                  child: const TextField(
-                                    decoration: InputDecoration(
+                                  child: TextField(
+                                    controller: emailController,
+                                    decoration: const InputDecoration(
                                         hintText: "Ingresa tu Email",
                                         hintStyle:
                                         TextStyle(color: Colors.grey),
                                         border: InputBorder.none),
+                                    keyboardType: TextInputType.emailAddress,
                                   ),
                                 ),
                                 Container(
@@ -91,9 +96,10 @@ class  login extends StatelessWidget {
                                       border: Border(
                                           bottom: BorderSide(
                                               color: Colors.grey.shade200))),
-                                  child: const TextField(
+                                  child: TextField(
+                                    controller: passwordController,
                                     obscureText: true,
-                                    decoration: InputDecoration(
+                                    decoration: const InputDecoration(
                                         hintText: "Contraseña",
                                         hintStyle:
                                         TextStyle(color: Colors.grey),
@@ -108,17 +114,48 @@ class  login extends StatelessWidget {
                         height: 100,
                       ),
                       FadeInUp(
-                          duration: const  Duration(milliseconds: 1000),
+                          duration: const Duration(milliseconds: 1000),
                           child: MaterialButton(
-                            onPressed: () {},
+                            onPressed: () {
+                              // Simulación de autenticación
+                              if (emailController.text == "usuario@example.com" &&
+                                  passwordController.text == "password") {
+                                // Navegamos a la pantalla de usuarios y pasamos el nombre del usuario
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const Usuario(
+                                      nombreUsuario: "Nombre del Usuario",
+                                    ),
+                                  ),
+                                );
+                              } else {
+                                // Implementa lógica para manejar credenciales incorrectas
+                                showDialog(
+                                  context: context,
+                                  builder: (BuildContext context) {
+                                    return AlertDialog(
+                                      title: Text("Error de autenticación"),
+                                      content: const Text(
+                                          "El correo electrónico o la contraseña son incorrectos."),
+                                      actions: <Widget>[
+                                        TextButton(
+                                          child: Text("Aceptar"),
+                                          onPressed: () {
+                                            Navigator.of(context).pop();
+                                          },
+                                        ),
+                                      ],
+                                    );
+                                  },
+                                );
+                              }
+                            },
                             height: 50,
-                            // padding: EdgeInsets.symmetric(horizontal: 20),
                             color: Colors.blue[900],
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(60),
                             ),
-                            // decoration: BoxDecoration(
-                            // ),
                             child: const Center(
                               child: Text(
                                 "Ingresar",
