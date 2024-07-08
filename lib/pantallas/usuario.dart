@@ -102,14 +102,6 @@ class _UsuarioState extends State<Usuario> with SingleTickerProviderStateMixin {
                   leading: Icon(Icons.email),
                   title: Text('usuario@example.com'),
                 ),
-                const ListTile(
-                  leading: Icon(Icons.phone),
-                  title: Text('+1234567890'),
-                ),
-                const ListTile(
-                  leading: Icon(Icons.location_on),
-                  title: Text('Ciudad, País'),
-                ),
               ],
             ),
           ),
@@ -131,7 +123,7 @@ class _UsuarioState extends State<Usuario> with SingleTickerProviderStateMixin {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
                   Icon(Icons.logout, color: Colors.white),
-                  SizedBox(width: 10),
+                  SizedBox(width: 30,height: 40,),
                   Text(
                     'Cerrar Sesión',
                     style: TextStyle(
@@ -142,6 +134,7 @@ class _UsuarioState extends State<Usuario> with SingleTickerProviderStateMixin {
                 ],
               ),
             ),
+            
           ),
           const SizedBox(height: 20),
         ],
