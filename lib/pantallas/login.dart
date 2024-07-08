@@ -9,44 +9,45 @@ class Login extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       body: Container(
         width: double.infinity,
         decoration: BoxDecoration(
             gradient: LinearGradient(
                 begin: Alignment.topCenter,
-                colors: [Colors.blue.shade900, Colors.lightBlueAccent,Colors.white])),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            const SizedBox(
-              height: 80,
-            ),
-            Padding(
-              padding: EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  FadeInUp(
-                      duration: const Duration(milliseconds: 1000),
-                      child: const Text(
-                        "Fitchair",
-                        style: TextStyle(color: Colors.white, fontSize: 40),
-                      )),
-                  const SizedBox(
-                    height: 10,
-                  ),
-                  FadeInUp(
-                      duration: const Duration(milliseconds: 1300),
-                      child: const Text(
-                        "Bienvenido",
-                        style: TextStyle(color: Colors.white, fontSize: 18,),
-                      )),
-                ],
+                colors: [Colors.blue.shade900, Colors.lightBlueAccent, Colors.white])),
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              const SizedBox(
+                height: 80,
               ),
-            ),
-            const SizedBox(height: 20),
-            Expanded(
-              child: Container(
+              Padding(
+                padding: EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    FadeInUp(
+                        duration: const Duration(milliseconds: 1000),
+                        child: const Text(
+                          "Fitchair",
+                          style: TextStyle(color: Colors.white, fontSize: 40),
+                        )),
+                    const SizedBox(
+                      height: 10,
+                    ),
+                    FadeInUp(
+                        duration: const Duration(milliseconds: 1300),
+                        child: const Text(
+                          "Bienvenido",
+                          style: TextStyle(color: Colors.white, fontSize: 18,),
+                        )),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+              Container(
                 decoration: const BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.only(
@@ -118,8 +119,8 @@ class Login extends StatelessWidget {
                           child: MaterialButton(
                             onPressed: () {
                               // Simulación de autenticación
-                              if (emailController.text == "usuario@example.com" &&
-                                  passwordController.text == "password") {
+                              if (emailController.text == "max" &&
+                                  passwordController.text == "123") {
                                 // Navegamos a la pantalla de usuarios y pasamos el nombre del usuario
                                 Navigator.push(
                                   context,
@@ -168,9 +169,9 @@ class Login extends StatelessWidget {
                     ],
                   ),
                 ),
-              ),
-            )
-          ],
+              )
+            ],
+          ),
         ),
       ),
     );

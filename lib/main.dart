@@ -1,8 +1,6 @@
-import 'package:appint/pantallas/login.dart';
-import 'package:appint/pantallas/usuario.dart';
 import 'package:flutter/material.dart';
-import '../pantallas/login.dart'; // Importa tu pantalla de inicio de sesión
-import '../pantallas/usuario.dart'; // Importa tu pantalla de usuarios
+import '../pantallas/login.dart';
+import '../pantallas/usuario.dart';
 
 void main() {
   runApp(MyApp());
