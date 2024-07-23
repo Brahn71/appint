@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest.dart' as tz;
@@ -211,7 +212,9 @@ class _RelojAlarmaState extends State<RelojAlarma> {
     for (int i = 0; i < diasSeleccionados.length; i++) {
       if (diasSeleccionados[i]) {
         final tz.TZDateTime scheduledInstance = _nextInstanceOfScheduledDate(scheduledDate, i);
-        print('Programando notificación para $scheduledInstance'); // Log para verificar la programación
+        if (kDebugMode) {
+          print('Programando notificación para $scheduledInstance');
+        } // Log para verificar la programación
 
         await flutterLocalNotificationsPlugin.zonedSchedule(
           id,
@@ -309,7 +312,7 @@ class _RelojAlarmaState extends State<RelojAlarma> {
 class SelectDaysDialog extends StatefulWidget {
   final List<bool> diasIniciales;
 
-  const SelectDaysDialog({Key? key, this.diasIniciales = const [false, false, false, false, false, false, false]}) : super(key: key);
+  const SelectDaysDialog({super.key, this.diasIniciales = const [false, false, false, false, false, false, false]});
 
   @override
   _SelectDaysDialogState createState() => _SelectDaysDialogState();
