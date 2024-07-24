@@ -1,12 +1,97 @@
 import 'package:flutter/material.dart';
 import 'package:animate_do/animate_do.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'usuario.dart';
 
+class Login extends StatefulWidget {
+  @override
+  _LoginState createState() => _LoginState();
+}
 
-
-class Login extends StatelessWidget {
+class _LoginState extends State<Login> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+  bool isLoading = false;
+
+  void _signIn() async {
+    setState(() {
+      isLoading = true;
+    });
+
+    String email = emailController.text.trim();
+    String password = passwordController.text.trim();
+
+    try {
+      // Busca el documento del usuario en Firestore
+      DocumentSnapshot userDoc = await FirebaseFirestore.instance
+          .collection('usuarios')
+          .doc(email)
+          .get();
+
+      if (userDoc.exists) {
+        // Verifica la contraseña
+        String storedPassword = userDoc['password'];
+        if (storedPassword == password) {
+          // Si la contraseña coincide, autentica con FirebaseAuth
+          UserCredential userCredential = await FirebaseAuth.instance
+              .signInWithEmailAndPassword(
+            email: email,
+            password: password,
+          );
+
+          // Navega a la pantalla de usuarios y pasa el usuario
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => UsuarioPage(usuario: userCredential.user),
+            ),
+          );
+        } else {
+          throw FirebaseAuthException(
+            code: 'wrong-password',
+            message: 'La contraseña es incorrecta.',
+          );
+        }
+      } else {
+        throw FirebaseAuthException(
+          code: 'user-not-found',
+          message: 'No se encontró ningún usuario con ese correo.',
+        );
+      }
+    } on FirebaseAuthException catch (e) {
+      String errorMessage;
+      if (e.code == 'user-not-found') {
+        errorMessage = 'No se encontró ningún usuario con ese correo.';
+      } else if (e.code == 'wrong-password') {
+        errorMessage = 'La contraseña es incorrecta.';
+      } else {
+        errorMessage = 'Error de autenticación: ${e.message}';
+      }
+
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text("Error de autenticación"),
+            content: Text(errorMessage),
+            actions: <Widget>[
+              TextButton(
+                child: Text("Aceptar"),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          );
+        },
+      );
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -73,8 +158,7 @@ class Login extends StatelessWidget {
                             borderRadius: BorderRadius.circular(10),
                             boxShadow: const [
                               BoxShadow(
-                                color: Color.fromRGBO(
-                                    27, 202, 225, 0.3),
+                                color: Color.fromRGBO(27, 202, 225, 0.3),
                                 blurRadius: 20,
                                 offset: Offset(0, 10),
                               ),
@@ -128,48 +212,18 @@ class Login extends StatelessWidget {
                       FadeInUp(
                         duration: const Duration(milliseconds: 1000),
                         child: MaterialButton(
-                          onPressed: () {
-                            // Simulación de autenticación
-                            if (emailController.text == "max" &&
-                                passwordController.text == "123") {
-                              // Navegamos a la pantalla de usuarios y pasamos el nombre del usuario
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => const Usuario(
-                                    nombreUsuario: "Nombre del Usuario",
-                                  ),
-                                ),
-                              );
-                            } else {
-                              // Implementa lógica para manejar credenciales incorrectas
-                              showDialog(
-                                context: context,
-                                builder: (BuildContext context) {
-                                  return AlertDialog(
-                                    title: Text("Error de autenticación"),
-                                    content: const Text(
-                                        "El correo electrónico o la contraseña son incorrectos."),
-                                    actions: <Widget>[
-                                      TextButton(
-                                        child: Text("Aceptar"),
-                                        onPressed: () {
-                                          Navigator.of(context).pop();
-                                        },
-                                      ),
-                                    ],
-                                  );
-                                },
-                              );
-                            }
-                          },
+                          onPressed: isLoading ? null : _signIn,
                           height: 50,
                           color: Colors.blue[900],
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(60),
                           ),
-                          child: const Center(
-                            child: Text(
+                          child: Center(
+                            child: isLoading
+                                ? CircularProgressIndicator(
+                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            )
+                                : const Text(
                               "Ingresar",
                               style: TextStyle(
                                 color: Colors.white,
@@ -184,6 +238,30 @@ class Login extends StatelessWidget {
                 ),
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class UsuarioPage extends StatelessWidget {
+  final User? usuario;
+
+  const UsuarioPage({Key? key, required this.usuario}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Usuario'),
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            Text('Email: ${usuario?.email ?? 'No email'}'),
+            Text('UID: ${usuario?.uid ?? 'No UID'}'),
           ],
         ),
       ),

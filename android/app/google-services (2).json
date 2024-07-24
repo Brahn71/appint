@@ -1,0 +1,49 @@
+{
+  "project_info": {
+    "project_number": "5764322017",
+    "firebase_url": "https://fitchair1-default-rtdb.firebaseio.com",
+    "project_id": "fitchair1",
+    "storage_bucket": "fitchair1.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:5764322017:android:cda1b7187f49e85f7b9da0",
+        "android_client_info": {
+          "package_name": "com.example.appint"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyByVFzRjG4qpTw0NjY7ziUwPtgrSML1ylA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:5764322017:android:e012371609d2f1647b9da0",
+        "android_client_info": {
+          "package_name": "com.example.appint"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyByVFzRjG4qpTw0NjY7ziUwPtgrSML1ylA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
