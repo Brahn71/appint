@@ -3,8 +3,15 @@ import 'reloj_alarma.dart';
 
 class Usuario extends StatefulWidget {
   final String nombreUsuario;
+  final String email; // Agregado para mostrar el correo electrónico
+  final DateTime lastLogin; // Agregado para mostrar la última fecha de inicio de sesión
 
-  const Usuario({super.key, required this.nombreUsuario});
+  const Usuario({
+    super.key,
+    required this.nombreUsuario,
+    required this.email,
+    required this.lastLogin,
+  });
 
   @override
   _UsuarioState createState() => _UsuarioState();
@@ -98,9 +105,13 @@ class _UsuarioState extends State<Usuario> with SingleTickerProviderStateMixin {
                   ),
                 ),
                 const SizedBox(height: 10),
-                const ListTile(
-                  leading: Icon(Icons.email),
-                  title: Text('usuario@example.com'),
+                ListTile(
+                  leading: const Icon(Icons.email),
+                  title: Text(widget.email), // Mostrar el correo electrónico
+                ),
+                ListTile(
+                  leading: const Icon(Icons.access_time),
+                  title: Text('Último inicio de sesión: ${widget.lastLogin.toLocal()}'), // Mostrar la última fecha de inicio de sesión
                 ),
               ],
             ),
@@ -123,7 +134,7 @@ class _UsuarioState extends State<Usuario> with SingleTickerProviderStateMixin {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
                   Icon(Icons.logout, color: Colors.white),
-                  SizedBox(width: 30,height: 40,),
+                  SizedBox(width: 30, height: 40),
                   Text(
                     'Cerrar Sesión',
                     style: TextStyle(
@@ -134,7 +145,6 @@ class _UsuarioState extends State<Usuario> with SingleTickerProviderStateMixin {
                 ],
               ),
             ),
-            
           ),
           const SizedBox(height: 20),
         ],

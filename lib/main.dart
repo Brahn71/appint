@@ -1,27 +1,30 @@
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import '../pantallas/login.dart';
-import '../pantallas/usuario.dart';
 
-
-void main() {
-  runApp(MyApp());
+// Manejo de mensajes en segundo plano
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp();
+  print("Handling a background message: ${message.messageId}");
 }
 
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+  runApp(MyApp());
+}
 
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false,
+      title: 'Flutter Demo',
       theme: ThemeData(
         primarySwatch: Colors.blue,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      initialRoute: '/', // Ruta inicial
-      routes: {
-        '/': (context) => Login(), // Ruta para la pantalla de inicio de sesión
-        '/usuarios': (context) => Usuario(nombreUsuario: 'parra',), // Ruta para la pantalla de usuarios
-      },
+      home: Login(),
     );
   }
 }

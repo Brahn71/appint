@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'usuario.dart';
 
 class Login extends StatefulWidget {
@@ -14,7 +13,7 @@ class _LoginState extends State<Login> {
   final TextEditingController passwordController = TextEditingController();
   bool isLoading = false;
 
-  void _signIn() async {
+  Future<void> _login() async {
     setState(() {
       isLoading = true;
     });
@@ -23,51 +22,31 @@ class _LoginState extends State<Login> {
     String password = passwordController.text.trim();
 
     try {
-      // Busca el documento del usuario en Firestore
-      DocumentSnapshot userDoc = await FirebaseFirestore.instance
-          .collection('usuarios')
-          .doc(email)
-          .get();
+      final UserCredential userCredential = await FirebaseAuth.instance
+          .signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
 
-      if (userDoc.exists) {
-        // Verifica la contraseña
-        String storedPassword = userDoc['password'];
-        if (storedPassword == password) {
-          // Si la contraseña coincide, autentica con FirebaseAuth
-          UserCredential userCredential = await FirebaseAuth.instance
-              .signInWithEmailAndPassword(
-            email: email,
-            password: password,
-          );
+      // Aquí puedes obtener información adicional del usuario si está disponible
+      final user = userCredential.user;
+      final displayName = user?.displayName ?? 'Nombre no disponible';
+      final lastLogin = user?.metadata.lastSignInTime ?? DateTime.now();
 
-          // Navega a la pantalla de usuarios y pasa el usuario
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => UsuarioPage(usuario: userCredential.user),
-            ),
-          );
-        } else {
-          throw FirebaseAuthException(
-            code: 'wrong-password',
-            message: 'La contraseña es incorrecta.',
-          );
-        }
-      } else {
-        throw FirebaseAuthException(
-          code: 'user-not-found',
-          message: 'No se encontró ningún usuario con ese correo.',
-        );
-      }
-    } on FirebaseAuthException catch (e) {
-      String errorMessage;
-      if (e.code == 'user-not-found') {
-        errorMessage = 'No se encontró ningún usuario con ese correo.';
-      } else if (e.code == 'wrong-password') {
-        errorMessage = 'La contraseña es incorrecta.';
-      } else {
-        errorMessage = 'Error de autenticación: ${e.message}';
-      }
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => Usuario(
+            nombreUsuario: displayName,
+            email: user?.email ?? 'No email',
+            lastLogin: lastLogin,
+          ),
+        ),
+      );
+
+    } catch (e) {
+      // Manejo del error
+      String errorMessage = 'Error: ${e.toString()}';
 
       showDialog(
         context: context,
@@ -212,7 +191,7 @@ class _LoginState extends State<Login> {
                       FadeInUp(
                         duration: const Duration(milliseconds: 1000),
                         child: MaterialButton(
-                          onPressed: isLoading ? null : _signIn,
+                          onPressed: isLoading ? null : _login,
                           height: 50,
                           color: Colors.blue[900],
                           shape: RoundedRectangleBorder(
@@ -238,30 +217,6 @@ class _LoginState extends State<Login> {
                 ),
               ),
             ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class UsuarioPage extends StatelessWidget {
-  final User? usuario;
-
-  const UsuarioPage({Key? key, required this.usuario}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Usuario'),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text('Email: ${usuario?.email ?? 'No email'}'),
-            Text('UID: ${usuario?.uid ?? 'No UID'}'),
           ],
         ),
       ),
