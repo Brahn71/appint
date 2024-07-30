@@ -5,8 +5,8 @@ import 'login.dart'; // Asegúrate de importar el archivo Login.dart
 
 class Usuario extends StatefulWidget {
   final String nombreUsuario;
-  final String email; // Agregado para mostrar el correo electrónico
-  final DateTime lastLogin; // Agregado para mostrar la última fecha de inicio de sesión
+  final String email;
+  final DateTime lastLogin;
 
   const Usuario({
     super.key,
@@ -43,7 +43,6 @@ class _UsuarioState extends State<Usuario> with SingleTickerProviderStateMixin {
         MaterialPageRoute(builder: (context) => Login()),
       );
     } catch (e) {
-      // Manejo de errores en caso de fallo al cerrar sesión
       String errorMessage = 'Error: ${e.toString()}';
 
       showDialog(
@@ -70,12 +69,13 @@ class _UsuarioState extends State<Usuario> with SingleTickerProviderStateMixin {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Perfil de Usuario'),
+        backgroundColor: Colors.blueAccent,
+        title: const Text('Perfil de Usuario', style: TextStyle(color: Colors.white)),
         bottom: TabBar(
           controller: _tabController,
           tabs: const [
             Tab(icon: Icon(Icons.person), text: 'Perfil'),
-            Tab(icon: Icon(Icons.alarm), text: 'Reloj de Alarma'),
+            Tab(icon: Icon(Icons.alarm), text: 'Alarma'),
           ],
         ),
       ),
@@ -105,7 +105,7 @@ class _UsuarioState extends State<Usuario> with SingleTickerProviderStateMixin {
             child: Row(
               children: <Widget>[
                 CircleAvatar(
-                  radius: 40,
+                  radius: 30,
                   backgroundColor: Colors.white,
                   child: Icon(
                     Icons.person,
@@ -141,11 +141,11 @@ class _UsuarioState extends State<Usuario> with SingleTickerProviderStateMixin {
                 const SizedBox(height: 10),
                 ListTile(
                   leading: const Icon(Icons.email),
-                  title: Text(widget.email), // Mostrar el correo electrónico
+                  title: Text(widget.email),
                 ),
                 ListTile(
                   leading: const Icon(Icons.access_time),
-                  title: Text('Último inicio de sesión: ${widget.lastLogin.toLocal()}'), // Mostrar la última fecha de inicio de sesión
+                  title: Text('Último inicio de sesión: ${widget.lastLogin.toLocal()}'),
                 ),
               ],
             ),
@@ -154,7 +154,7 @@ class _UsuarioState extends State<Usuario> with SingleTickerProviderStateMixin {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: ElevatedButton(
-              onPressed: _logout, // Cambiado para llamar al método _logout
+              onPressed: _logout,
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.all(15),
                 backgroundColor: Colors.blue.shade900,

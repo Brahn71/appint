@@ -1,12 +1,14 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
+import 'package:uuid/uuid.dart';
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+final String channelId = Uuid().v4(); // Generar un ID único para el canal
 
 class RelojAlarma extends StatefulWidget {
   const RelojAlarma({super.key});
@@ -37,33 +39,18 @@ class _RelojAlarmaState extends State<RelojAlarma> {
     await flutterLocalNotificationsPlugin.initialize(
       initializationSettings,
       onDidReceiveNotificationResponse: (NotificationResponse notificationResponse) async {
-        // Handle notification tapped logic here
-        showDialog(
-          context: context,
-          builder: (_) => AlertDialog(
-            title: const Text("Alarma"),
-            content: const Text("Es hora de pararte de la silla!"),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-                child: const Text("OK"),
-              ),
-            ],
-          ),
-        );
+        // Manejo de la respuesta de la notificación
       },
     );
 
-    _createNotificationChannel(); // Ensure the notification channel is created
+    _createNotificationChannel();
   }
 
   void _createNotificationChannel() async {
-    const AndroidNotificationChannel channel = AndroidNotificationChannel(
-      'your_channel_id',
-      'your_channel_name',
-      description: 'your_channel_description',
+    final AndroidNotificationChannel channel = AndroidNotificationChannel(
+      channelId,  // Usar el ID generado automáticamente
+      'Alarm Channel',
+      description: 'Channel for alarm notifications',
       importance: Importance.high,
       playSound: true,
       enableLights: true,
@@ -193,20 +180,23 @@ class _RelojAlarmaState extends State<RelojAlarma> {
         final tz.TZDateTime scheduledInstance = _nextInstanceOfScheduledDate(scheduledDate, i);
         if (kDebugMode) {
           print('Programando notificación para $scheduledInstance');
-        } // Log para verificar la programación
+        }
 
         await flutterLocalNotificationsPlugin.zonedSchedule(
-          id,
+          id + i, // Asegúrate de usar un ID único para cada notificación
           'Alarma',
-          'Es hora de pararte de la silla!',
+          '¡Levántate flojo!',
           scheduledInstance,
-          const NotificationDetails(
+          NotificationDetails(
             android: AndroidNotificationDetails(
-              'your_channel_id',
-              'your_channel_name',
-              channelDescription: 'your_channel_description',
+              channelId,
+              'Alarm Channel',
+              channelDescription: 'Channel for alarm notifications',
               importance: Importance.high,
               priority: Priority.high,
+              playSound: true,
+              enableLights: true,
+              enableVibration: true,
             ),
           ),
           androidScheduleMode: AndroidScheduleMode.exact,
@@ -220,12 +210,18 @@ class _RelojAlarmaState extends State<RelojAlarma> {
   tz.TZDateTime _nextInstanceOfScheduledDate(DateTime scheduledDate, int day) {
     tz.TZDateTime scheduledInstance = tz.TZDateTime.from(scheduledDate, tz.local);
 
-    while (scheduledInstance.weekday != day + 1) {
+    while (scheduledInstance.weekday != (day + 1) % 7 + 1) {
       scheduledInstance = scheduledInstance.add(const Duration(days: 1));
+    }
+
+    if (kDebugMode) {
+      print('Siguiente instancia programada: $scheduledInstance');
     }
 
     return scheduledInstance;
   }
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -243,19 +239,19 @@ class _RelojAlarmaState extends State<RelojAlarma> {
               final List<bool> diasSeleccionados = alarmas[index]['days'];
 
               return ListTile(
-                title: Text('Alarma ${index + 1}: ${alarmaDateTime.toLocal()}'),
+                title: Text('Alarma ${index + 1}: ${_formattedTime(alarmaDateTime)}'),
                 subtitle: Text('Días: ${_diasSeleccionadosToString(diasSeleccionados)}'),
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     IconButton(
-                      icon: const Icon(Icons.edit),
+                      icon: const Icon(Icons.mode_edit_outline_outlined),
                       onPressed: () {
                         editarAlarma(index);
                       },
                     ),
                     IconButton(
-                      icon: const Icon(Icons.delete),
+                      icon: const Icon(Icons.delete_forever_outlined),
                       onPressed: () {
                         eliminarAlarma(index);
                       },
@@ -268,6 +264,10 @@ class _RelojAlarmaState extends State<RelojAlarma> {
         ),
       ],
     );
+  }
+
+  String _formattedTime(DateTime dateTime) {
+    return "${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}";
   }
 
   String _diasSeleccionadosToString(List<bool> diasSeleccionados) {
@@ -309,69 +309,13 @@ class _SelectDaysDialogState extends State<SelectDaysDialog> {
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          CheckboxListTile(
-            title: const Text('Lunes'),
-            value: diasSeleccionados[0],
-            onChanged: (bool? value) {
-              setState(() {
-                diasSeleccionados[0] = value ?? false;
-              });
-            },
-          ),
-          CheckboxListTile(
-            title: const Text('Martes'),
-            value: diasSeleccionados[1],
-            onChanged: (bool? value) {
-              setState(() {
-                diasSeleccionados[1] = value ?? false;
-              });
-            },
-          ),
-          CheckboxListTile(
-            title: const Text('Miércoles'),
-            value: diasSeleccionados[2],
-            onChanged: (bool? value) {
-              setState(() {
-                diasSeleccionados[2] = value ?? false;
-              });
-            },
-          ),
-          CheckboxListTile(
-            title: const Text('Jueves'),
-            value: diasSeleccionados[3],
-            onChanged: (bool? value) {
-              setState(() {
-                diasSeleccionados[3] = value ?? false;
-              });
-            },
-          ),
-          CheckboxListTile(
-            title: const Text('Viernes'),
-            value: diasSeleccionados[4],
-            onChanged: (bool? value) {
-              setState(() {
-                diasSeleccionados[4] = value ?? false;
-              });
-            },
-          ),
-          CheckboxListTile(
-            title: const Text('Sábado'),
-            value: diasSeleccionados[5],
-            onChanged: (bool? value) {
-              setState(() {
-                diasSeleccionados[5] = value ?? false;
-              });
-            },
-          ),
-          CheckboxListTile(
-            title: const Text('Domingo'),
-            value: diasSeleccionados[6],
-            onChanged: (bool? value) {
-              setState(() {
-                diasSeleccionados[6] = value ?? false;
-              });
-            },
-          ),
+          _buildDayCheckbox('Lunes', 0),
+          _buildDayCheckbox('Martes', 1),
+          _buildDayCheckbox('Miércoles', 2),
+          _buildDayCheckbox('Jueves', 3),
+          _buildDayCheckbox('Viernes', 4),
+          _buildDayCheckbox('Sábado', 5),
+          _buildDayCheckbox('Domingo', 6),
         ],
       ),
       actions: <Widget>[
@@ -388,6 +332,18 @@ class _SelectDaysDialogState extends State<SelectDaysDialog> {
           child: const Text('Aceptar'),
         ),
       ],
+    );
+  }
+
+  CheckboxListTile _buildDayCheckbox(String title, int index) {
+    return CheckboxListTile(
+      title: Text(title),
+      value: diasSeleccionados[index],
+      onChanged: (bool? value) {
+        setState(() {
+          diasSeleccionados[index] = value ?? false;
+        });
+      },
     );
   }
 }
