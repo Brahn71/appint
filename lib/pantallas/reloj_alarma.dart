@@ -76,27 +76,6 @@ class _RelojAlarmaState extends State<RelojAlarma> {
     }
   }
 
-  Future<void> mostrarNotificacion() async {
-    const AndroidNotificationDetails androidNotificationDetails = AndroidNotificationDetails(
-      'your_channel_id',
-      'your_channel_name',
-      channelDescription: 'your_channel_description',
-      importance: Importance.high,
-      priority: Priority.high,
-    );
-
-    const NotificationDetails notificationDetails = NotificationDetails(
-      android: androidNotificationDetails,
-    );
-
-    await flutterLocalNotificationsPlugin.show(
-      0,
-      'Prueba de notificación',
-      'Si funcionó',
-      notificationDetails,
-    );
-  }
-
   void loadAlarmas() async {
     final prefs = await SharedPreferences.getInstance();
     final String? alarmasString = prefs.getString('alarmas');
@@ -256,10 +235,6 @@ class _RelojAlarmaState extends State<RelojAlarma> {
           onPressed: agregarAlarma,
           child: const Text('Agregar Alarma'),
         ),
-        ElevatedButton(
-          onPressed: mostrarNotificacion, // Botón para probar la notificación
-          child: const Text('Mostrar Notificación de Prueba'),
-        ),
         Expanded(
           child: ListView.builder(
             itemCount: alarmas.length,
@@ -402,19 +377,17 @@ class _SelectDaysDialogState extends State<SelectDaysDialog> {
       actions: <Widget>[
         TextButton(
           onPressed: () {
-            Navigator.of(context).pop(diasSeleccionados);
-          },
-          child: const Text('Aceptar'),
-        ),
-        TextButton(
-          onPressed: () {
             Navigator.of(context).pop();
           },
           child: const Text('Cancelar'),
+        ),
+        TextButton(
+          onPressed: () {
+            Navigator.of(context).pop(diasSeleccionados);
+          },
+          child: const Text('Aceptar'),
         ),
       ],
     );
   }
 }
-
-

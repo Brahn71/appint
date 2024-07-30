@@ -1,5 +1,7 @@
+import 'package:appint/pantallas/reloj_alarma.dart';
 import 'package:flutter/material.dart';
-import 'reloj_alarma.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'login.dart'; // Asegúrate de importar el archivo Login.dart
 
 class Usuario extends StatefulWidget {
   final String nombreUsuario;
@@ -30,6 +32,38 @@ class _UsuarioState extends State<Usuario> with SingleTickerProviderStateMixin {
   void dispose() {
     _tabController.dispose();
     super.dispose();
+  }
+
+  Future<void> _logout() async {
+    try {
+      await FirebaseAuth.instance.signOut();
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => Login()),
+      );
+    } catch (e) {
+      // Manejo de errores en caso de fallo al cerrar sesión
+      String errorMessage = 'Error: ${e.toString()}';
+
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text("Error"),
+            content: Text(errorMessage),
+            actions: <Widget>[
+              TextButton(
+                child: Text("Aceptar"),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          );
+        },
+      );
+    }
   }
 
   @override
@@ -120,12 +154,10 @@ class _UsuarioState extends State<Usuario> with SingleTickerProviderStateMixin {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: ElevatedButton(
-              onPressed: () {
-                // Implementa la lógica para cerrar sesión o navegar hacia atrás
-                Navigator.pop(context);
-              },
+              onPressed: _logout, // Cambiado para llamar al método _logout
               style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.all(15), backgroundColor: Colors.blue.shade900,
+                padding: const EdgeInsets.all(15),
+                backgroundColor: Colors.blue.shade900,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(30),
                 ),
@@ -134,7 +166,7 @@ class _UsuarioState extends State<Usuario> with SingleTickerProviderStateMixin {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
                   Icon(Icons.logout, color: Colors.white),
-                  SizedBox(width: 30, height: 40),
+                  SizedBox(width: 10),
                   Text(
                     'Cerrar Sesión',
                     style: TextStyle(
@@ -146,7 +178,6 @@ class _UsuarioState extends State<Usuario> with SingleTickerProviderStateMixin {
               ),
             ),
           ),
-          const SizedBox(height: 20),
         ],
       ),
     );

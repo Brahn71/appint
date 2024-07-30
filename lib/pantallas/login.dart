@@ -21,6 +21,21 @@ class _LoginState extends State<Login> {
     String email = emailController.text.trim();
     String password = passwordController.text.trim();
 
+    if (email.isEmpty || password.isEmpty) {
+      // Mostrar mensaje de error si uno de los campos está vacío
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Por favor ingresa tu correo y contraseña.'),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+      setState(() {
+        isLoading = false;
+      });
+      return;
+    }
+
     try {
       final UserCredential userCredential = await FirebaseAuth.instance
           .signInWithEmailAndPassword(
@@ -45,25 +60,30 @@ class _LoginState extends State<Login> {
       );
 
     } catch (e) {
-      // Manejo del error
-      String errorMessage = 'Error: ${e.toString()}';
+      String errorMessage;
 
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: Text("Error de autenticación"),
-            content: Text(errorMessage),
-            actions: <Widget>[
-              TextButton(
-                child: Text("Aceptar"),
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-              ),
-            ],
-          );
-        },
+      if (e is FirebaseAuthException) {
+        switch (e.code) {
+          case 'user-not-found':
+          case 'wrong-password':
+            errorMessage = 'Correo o contraseña incorrectos.';
+            break;
+          case 'invalid-email':
+            errorMessage = 'El correo electrónico no es válido.';
+            break;
+          default:
+            errorMessage = 'Error: ${e.message}';
+        }
+      } else {
+        errorMessage = 'Error: ${e.toString()}';
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(errorMessage),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 3),
+        ),
       );
     } finally {
       setState(() {
@@ -199,7 +219,7 @@ class _LoginState extends State<Login> {
                           ),
                           child: Center(
                             child: isLoading
-                                ? CircularProgressIndicator(
+                                ? const CircularProgressIndicator(
                               valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                             )
                                 : const Text(
