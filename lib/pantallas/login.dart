@@ -24,7 +24,7 @@ class _LoginState extends State<Login> {
     if (email.isEmpty || password.isEmpty) {
       // Mostrar mensaje de error si uno de los campos está vacío
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: const Text('Por favor ingresa tu correo y contraseña.'),
           backgroundColor: Colors.red,
           duration: const Duration(seconds: 3),
@@ -64,7 +64,6 @@ class _LoginState extends State<Login> {
 
       if (e is FirebaseAuthException) {
         switch (e.code) {
-          case 'user-not-found':
           case 'wrong-password':
             errorMessage = 'Correo o contraseña incorrectos.';
             break;

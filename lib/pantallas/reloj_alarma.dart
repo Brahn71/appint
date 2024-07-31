@@ -75,6 +75,11 @@ class _RelojAlarmaState extends State<RelojAlarma> {
           return map;
         }).toList();
       });
+
+      // Reprogramar alarmas
+      for (int i = 0; i < alarmas.length; i++) {
+        programarNotificacion(alarmas[i], i);
+      }
     }
   }
 
@@ -221,53 +226,61 @@ class _RelojAlarmaState extends State<RelojAlarma> {
     return scheduledInstance;
   }
 
-
-
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: <Widget>[
-        ElevatedButton(
-          onPressed: agregarAlarma,
-          child: const Text('Agregar Alarma'),
-        ),
-        Expanded(
-          child: ListView.builder(
-            itemCount: alarmas.length,
-            itemBuilder: (context, index) {
-              final DateTime alarmaDateTime = DateTime.parse(alarmas[index]['time']);
-              final List<bool> diasSeleccionados = alarmas[index]['days'];
+    return Scaffold(
+      body: Column(
+        children: <Widget>[
+          Expanded(
+            child: ListView.builder(
+              itemCount: alarmas.length,
+              itemBuilder: (context, index) {
+                final DateTime alarmaDateTime = DateTime.parse(alarmas[index]['time']);
+                final List<bool> diasSeleccionados = alarmas[index]['days'];
 
-              return ListTile(
-                title: Text('Alarma ${index + 1}: ${_formattedTime(alarmaDateTime)}'),
-                subtitle: Text('Días: ${_diasSeleccionadosToString(diasSeleccionados)}'),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.mode_edit_outline_outlined),
-                      onPressed: () {
-                        editarAlarma(index);
-                      },
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.delete_forever_outlined),
-                      onPressed: () {
-                        eliminarAlarma(index);
-                      },
-                    ),
-                  ],
-                ),
-              );
-            },
+                return ListTile(
+                  title: Text(_formattedTime(alarmaDateTime)),
+                  subtitle: Text('Días: ${_diasSeleccionadosToString(diasSeleccionados)}'),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.mode_edit_outline_outlined),
+                        onPressed: () {
+                          editarAlarma(index);
+                        },
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.delete_forever_outlined),
+                        onPressed: () {
+                          eliminarAlarma(index);
+                        },
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
           ),
-        ),
-      ],
+          Container(
+            alignment: Alignment.bottomCenter,
+            padding: const EdgeInsets.all(8.0),
+            child: ElevatedButton(
+              onPressed: agregarAlarma,
+              child: const Text('Agregar Alarma'),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
   String _formattedTime(DateTime dateTime) {
-    return "${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}";
+    final hour = dateTime.hour % 12;
+    final minute = dateTime.minute.toString().padLeft(2, '0');
+    final amPm = dateTime.hour >= 12 ? 'PM' : 'AM';
+    final displayHour = hour == 0 ? 12 : hour; // Muestra 12 en lugar de 0 para las 12 AM/PM
+    return "${displayHour.toString().padLeft(2, '0')}:${minute} $amPm";
   }
 
   String _diasSeleccionadosToString(List<bool> diasSeleccionados) {

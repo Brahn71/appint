@@ -150,32 +150,66 @@ class _UsuarioState extends State<Usuario> with SingleTickerProviderStateMixin {
               ],
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 100),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: ElevatedButton(
-              onPressed: _logout,
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.all(15),
-                backgroundColor: Colors.blue.shade900,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30),
-                ),
-              ),
-              child: const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  Icon(Icons.logout, color: Colors.white),
-                  SizedBox(width: 10),
-                  Text(
-                    'Cerrar Sesión',
-                    style: TextStyle(
-                      fontSize: 20,
-                      color: Colors.white,
+            child: Column(
+              children: [
+                // Botón "Tomar Peso"
+                ElevatedButton(
+                  onPressed: () {
+                    // Acción del botón "Tomar Peso"
+                    print('Tomar Peso ');
+                  },
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.all(15),
+                    backgroundColor: Colors.blue.shade900,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
                     ),
                   ),
-                ],
-              ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      Icon(Icons.settings_accessibility, color: Colors.white),
+                      SizedBox(width: 10),
+                      Text(
+                        'Tomar Peso',
+                        style: TextStyle(
+                          fontSize: 20,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16), // Espacio entre los botones
+                // Botón "Cerrar Sesión"
+                ElevatedButton(
+                  onPressed: _logout,
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.all(15),
+                    backgroundColor: Colors.blue.shade900,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                  ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      Icon(Icons.logout, color: Colors.white),
+                      SizedBox(width: 10),
+                      Text(
+                        'Cerrar Sesión',
+                        style: TextStyle(
+                          fontSize: 20,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
         ],
