@@ -103,23 +103,31 @@ class _UsuarioState extends State<Usuario> with SingleTickerProviderStateMixin {
               ),
             ),
             child: Row(
+              mainAxisAlignment: MainAxisAlignment.start,
               children: <Widget>[
                 CircleAvatar(
                   radius: 30,
                   backgroundColor: Colors.white,
                   child: Icon(
-                    Icons.person,
+                    Icons.chair_alt,
                     size: 50,
                     color: Colors.blue.shade900,
                   ),
                 ),
                 const SizedBox(width: 20),
-                Text(
-                  widget.nombreUsuario,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Text(
+                        widget.email.length >= 3 ? widget.email.substring(0,3).toUpperCase()
+                        : widget.email.toUpperCase(),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 30,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
