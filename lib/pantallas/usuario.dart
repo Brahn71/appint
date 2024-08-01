@@ -1,7 +1,8 @@
+import 'package:appint/pantallas/logicaboton/tomarpeso.dart';
 import 'package:appint/pantallas/reloj_alarma.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'login.dart'; // Asegúrate de importar el archivo Login.dart
+import 'login.dart';
 
 class Usuario extends StatefulWidget {
   final String nombreUsuario;
@@ -21,6 +22,7 @@ class Usuario extends StatefulWidget {
 
 class _UsuarioState extends State<Usuario> with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  String? _peso;
 
   @override
   void initState() {
@@ -49,11 +51,11 @@ class _UsuarioState extends State<Usuario> with SingleTickerProviderStateMixin {
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
-            title: Text("Error"),
+            title: const Text("Error"),
             content: Text(errorMessage),
             actions: <Widget>[
               TextButton(
-                child: Text("Aceptar"),
+                child: const Text("Aceptar"),
                 onPressed: () {
                   Navigator.of(context).pop();
                 },
@@ -63,6 +65,13 @@ class _UsuarioState extends State<Usuario> with SingleTickerProviderStateMixin {
         },
       );
     }
+  }
+
+  Future<void> _obtenerPeso() async {
+    final peso = await TomarPeso.obtenerPesoDesdeFirebase();
+    setState(() {
+      _peso = peso;
+    });
   }
 
   @override
@@ -120,8 +129,8 @@ class _UsuarioState extends State<Usuario> with SingleTickerProviderStateMixin {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Text(
-                        widget.email.length >= 3 ? widget.email.substring(0,3).toUpperCase()
-                        : widget.email.toUpperCase(),
+                        widget.email.length >= 3 ? widget.email.substring(0, 3).toUpperCase()
+                            : widget.email.toUpperCase(),
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 30,
@@ -158,19 +167,27 @@ class _UsuarioState extends State<Usuario> with SingleTickerProviderStateMixin {
               ],
             ),
           ),
-          const SizedBox(height: 100),
+          const SizedBox(height: 20),
+          if (_peso != null) // Mostrar el peso si no es null
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 50),
+              child: Text(
+                'Peso: $_peso Kg',
+                style: TextStyle(
+                  fontSize: 30,
+                  color: Colors.blue.shade900,
+                ),
+              ),
+            ),
+          const SizedBox(height: 20),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Column(
               children: [
-                // Botón "Tomar Peso"
                 ElevatedButton(
-                  onPressed: () {
-                    // Acción del botón "Tomar Peso"
-                    print('Tomar Peso ');
-                  },
+                  onPressed: _obtenerPeso,
                   style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.all(15),
+                    padding: const EdgeInsets.all(20),
                     backgroundColor: Colors.blue.shade900,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(30),
@@ -191,8 +208,7 @@ class _UsuarioState extends State<Usuario> with SingleTickerProviderStateMixin {
                     ],
                   ),
                 ),
-                const SizedBox(height: 16), // Espacio entre los botones
-                // Botón "Cerrar Sesión"
+                const SizedBox(height: 16),
                 ElevatedButton(
                   onPressed: _logout,
                   style: ElevatedButton.styleFrom(
