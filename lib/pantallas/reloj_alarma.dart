@@ -1,14 +1,10 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:timezone/data/latest.dart' as tz;
-import 'package:timezone/timezone.dart' as tz;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
-import 'package:uuid/uuid.dart';
+import 'package:http/http.dart' as http;
 
-final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
-final String channelId = Uuid().v4(); // Generar un ID único para el canal
+final String channelId = 'your_channel_id'; // Usar un ID único para el canal
 
 class RelojAlarma extends StatefulWidget {
   const RelojAlarma({super.key});
@@ -19,51 +15,47 @@ class RelojAlarma extends StatefulWidget {
 
 class _RelojAlarmaState extends State<RelojAlarma> {
   List<Map<String, dynamic>> alarmas = [];
+  Timer? _timer;
+  bool _alarmaActiva = false;
 
   @override
   void initState() {
     super.initState();
-    initializeNotifications();
     loadAlarmas();
+    _startTimer();
   }
 
-  Future<void> initializeNotifications() async {
-    tz.initializeTimeZones();
-    const AndroidInitializationSettings initializationSettingsAndroid = AndroidInitializationSettings('app_icon');
-    const DarwinInitializationSettings initializationSettingsIOS = DarwinInitializationSettings();
-    const InitializationSettings initializationSettings = InitializationSettings(
-      android: initializationSettingsAndroid,
-      iOS: initializationSettingsIOS,
-    );
-
-    await flutterLocalNotificationsPlugin.initialize(
-      initializationSettings,
-      onDidReceiveNotificationResponse: (NotificationResponse notificationResponse) async {
-        // Manejo de la respuesta de la notificación
-      },
-    );
-
-    _createNotificationChannel();
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
   }
 
-  void _createNotificationChannel() async {
-    final AndroidNotificationChannel channel = AndroidNotificationChannel(
-      channelId,  // Usar el ID generado automáticamente
-      'Alarm Channel',
-      description: 'Channel for alarm notifications',
-      importance: Importance.high,
-      playSound: true,
-      enableLights: true,
-      enableVibration: true,
-    );
+  void _startTimer() {
+    _timer = Timer.periodic(const Duration(seconds: 1), (Timer timer) {
+      final now = DateTime.now();
+      for (var alarma in alarmas) {
+        final DateTime alarmaDateTime = DateTime.parse(alarma['time']);
+        final List<bool> diasSeleccionados = alarma['days'];
 
-    final androidPlugin = flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
-    if (androidPlugin != null) {
-      await androidPlugin.createNotificationChannel(channel);
-    }
+        if (diasSeleccionados[now.weekday - 1]) {
+          if (now.hour == alarmaDateTime.hour && now.minute == alarmaDateTime.minute) {
+            if (!_alarmaActiva) {
+              _activarAlarma();
+            }
+            break; // Evita que la alarma se active nuevamente durante el minuto
+          }
+        }
+      }
+
+      // Resetea la alarma activa al inicio de cada minuto
+      if (now.second == 0) {
+        _alarmaActiva = false;
+      }
+    });
   }
 
-  void loadAlarmas() async {
+  Future<void> loadAlarmas() async {
     final prefs = await SharedPreferences.getInstance();
     final String? alarmasString = prefs.getString('alarmas');
     if (alarmasString != null) {
@@ -75,18 +67,32 @@ class _RelojAlarmaState extends State<RelojAlarma> {
           return map;
         }).toList();
       });
-
-      // Reprogramar alarmas
-      for (int i = 0; i < alarmas.length; i++) {
-        programarNotificacion(alarmas[i], i);
-      }
     }
   }
 
-  void saveAlarmas() async {
+  Future<void> saveAlarmas() async {
     final prefs = await SharedPreferences.getInstance();
     final String alarmasJson = jsonEncode(alarmas);
     await prefs.setString('alarmas', alarmasJson);
+  }
+
+  Future<void> _activarAlarma() async {
+    await actualizarLedBuz(true);
+    _alarmaActiva = true; // Marcar la alarma como activa
+    await Future.delayed(const Duration(seconds: 5));
+    await actualizarLedBuz(false);
+  }
+
+  Future<void> actualizarLedBuz(bool estado) async {
+    final url = Uri.parse('https://fitchair1-default-rtdb.firebaseio.com/ledbuz.json');
+    final response = await http.patch(
+      url,
+      body: jsonEncode({'ledbuz': estado}),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Error al actualizar ledbuz');
+    }
   }
 
   Future<void> agregarAlarma() async {
@@ -120,7 +126,6 @@ class _RelojAlarmaState extends State<RelojAlarma> {
 
         setState(() {
           alarmas.add(nuevaAlarma);
-          programarNotificacion(nuevaAlarma, alarmas.length - 1);
           saveAlarmas();
         });
       }
@@ -160,8 +165,6 @@ class _RelojAlarmaState extends State<RelojAlarma> {
 
         setState(() {
           alarmas[index] = updatedAlarma;
-          flutterLocalNotificationsPlugin.cancel(index);
-          programarNotificacion(updatedAlarma, index);
           saveAlarmas();
         });
       }
@@ -169,61 +172,10 @@ class _RelojAlarmaState extends State<RelojAlarma> {
   }
 
   void eliminarAlarma(int index) async {
-    await flutterLocalNotificationsPlugin.cancel(index);
     setState(() {
       alarmas.removeAt(index);
       saveAlarmas();
     });
-  }
-
-  Future<void> programarNotificacion(Map<String, dynamic> alarma, int id) async {
-    final DateTime scheduledDate = DateTime.parse(alarma['time']);
-    final List<bool> diasSeleccionados = alarma['days'];
-
-    for (int i = 0; i < diasSeleccionados.length; i++) {
-      if (diasSeleccionados[i]) {
-        final tz.TZDateTime scheduledInstance = _nextInstanceOfScheduledDate(scheduledDate, i);
-        if (kDebugMode) {
-          print('Programando notificación para $scheduledInstance');
-        }
-
-        await flutterLocalNotificationsPlugin.zonedSchedule(
-          id + i, // Asegúrate de usar un ID único para cada notificación
-          'Alarma',
-          '¡Levántate flojo!',
-          scheduledInstance,
-          NotificationDetails(
-            android: AndroidNotificationDetails(
-              channelId,
-              'Alarm Channel',
-              channelDescription: 'Channel for alarm notifications',
-              importance: Importance.high,
-              priority: Priority.high,
-              playSound: true,
-              enableLights: true,
-              enableVibration: true,
-            ),
-          ),
-          androidScheduleMode: AndroidScheduleMode.exact,
-          uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.wallClockTime,
-          matchDateTimeComponents: DateTimeComponents.time,
-        );
-      }
-    }
-  }
-
-  tz.TZDateTime _nextInstanceOfScheduledDate(DateTime scheduledDate, int day) {
-    tz.TZDateTime scheduledInstance = tz.TZDateTime.from(scheduledDate, tz.local);
-
-    while (scheduledInstance.weekday != (day + 1) % 7 + 1) {
-      scheduledInstance = scheduledInstance.add(const Duration(days: 1));
-    }
-
-    if (kDebugMode) {
-      print('Siguiente instancia programada: $scheduledInstance');
-    }
-
-    return scheduledInstance;
   }
 
   @override
@@ -251,7 +203,7 @@ class _RelojAlarmaState extends State<RelojAlarma> {
                         },
                       ),
                       IconButton(
-                        icon: const Icon(Icons.delete_forever_outlined),
+                        icon: const Icon(Icons.delete),
                         onPressed: () {
                           eliminarAlarma(index);
                         },
@@ -262,13 +214,9 @@ class _RelojAlarmaState extends State<RelojAlarma> {
               },
             ),
           ),
-          Container(
-            alignment: Alignment.bottomCenter,
-            padding: const EdgeInsets.all(8.0),
-            child: ElevatedButton(
-              onPressed: agregarAlarma,
-              child: const Text('Agregar Alarma'),
-            ),
+          ElevatedButton(
+            onPressed: agregarAlarma,
+            child: const Text('Agregar Alarma'),
           ),
         ],
       ),
@@ -276,31 +224,33 @@ class _RelojAlarmaState extends State<RelojAlarma> {
   }
 
   String _formattedTime(DateTime dateTime) {
-    final hour = dateTime.hour % 12;
-    final minute = dateTime.minute.toString().padLeft(2, '0');
-    final amPm = dateTime.hour >= 12 ? 'PM' : 'AM';
-    final displayHour = hour == 0 ? 12 : hour; // Muestra 12 en lugar de 0 para las 12 AM/PM
-    return "${displayHour.toString().padLeft(2, '0')}:${minute} $amPm";
+    return '${dateTime.hour}:${dateTime.minute}';
   }
 
   String _diasSeleccionadosToString(List<bool> diasSeleccionados) {
-    final List<String> dias = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
-    final List<String> diasSeleccionadosString = [];
+    final List<String> dias = [
+      'Lunes',
+      'Martes',
+      'Miércoles',
+      'Jueves',
+      'Viernes',
+      'Sábado',
+      'Domingo'
+    ];
 
-    for (int i = 0; i < diasSeleccionados.length; i++) {
-      if (diasSeleccionados[i]) {
-        diasSeleccionadosString.add(dias[i]);
-      }
-    }
-
-    return diasSeleccionadosString.join(', ');
+    return dias
+        .asMap()
+        .entries
+        .where((entry) => diasSeleccionados[entry.key])
+        .map((entry) => entry.value)
+        .join(', ');
   }
 }
 
 class SelectDaysDialog extends StatefulWidget {
-  final List<bool> diasIniciales;
+  final List<bool>? diasIniciales;
 
-  const SelectDaysDialog({super.key, this.diasIniciales = const [false, false, false, false, false, false, false]});
+  const SelectDaysDialog({Key? key, this.diasIniciales}) : super(key: key);
 
   @override
   _SelectDaysDialogState createState() => _SelectDaysDialogState();
@@ -312,51 +262,43 @@ class _SelectDaysDialogState extends State<SelectDaysDialog> {
   @override
   void initState() {
     super.initState();
-    diasSeleccionados = List<bool>.from(widget.diasIniciales);
+    diasSeleccionados = widget.diasIniciales ?? List.generate(7, (_) => false);
   }
 
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
       title: const Text('Selecciona los días'),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
-          _buildDayCheckbox('Lunes', 0),
-          _buildDayCheckbox('Martes', 1),
-          _buildDayCheckbox('Miércoles', 2),
-          _buildDayCheckbox('Jueves', 3),
-          _buildDayCheckbox('Viernes', 4),
-          _buildDayCheckbox('Sábado', 5),
-          _buildDayCheckbox('Domingo', 6),
-        ],
-      ),
-      actions: <Widget>[
-        TextButton(
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-          child: const Text('Cancelar'),
+      content: SingleChildScrollView(
+        child: Column(
+          children: List.generate(7, (index) {
+            final String dia = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'][index];
+            return CheckboxListTile(
+              title: Text(dia),
+              value: diasSeleccionados[index],
+              onChanged: (bool? value) {
+                setState(() {
+                  diasSeleccionados[index] = value ?? false;
+                });
+              },
+            );
+          }),
         ),
+      ),
+      actions: [
         TextButton(
           onPressed: () {
             Navigator.of(context).pop(diasSeleccionados);
           },
           child: const Text('Aceptar'),
         ),
+        TextButton(
+          onPressed: () {
+            Navigator.of(context).pop(null);
+          },
+          child: const Text('Cancelar'),
+        ),
       ],
-    );
-  }
-
-  CheckboxListTile _buildDayCheckbox(String title, int index) {
-    return CheckboxListTile(
-      title: Text(title),
-      value: diasSeleccionados[index],
-      onChanged: (bool? value) {
-        setState(() {
-          diasSeleccionados[index] = value ?? false;
-        });
-      },
     );
   }
 }
