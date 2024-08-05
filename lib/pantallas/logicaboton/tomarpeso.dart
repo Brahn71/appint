@@ -11,10 +11,10 @@ class TomarPeso extends StatelessWidget {
     DatabaseEvent event = await databaseReference.once();
     DataSnapshot snapshot = event.snapshot;
     if (snapshot.value != null) {
-      // Convertir el peso de gramos a kilogramos
+
       double pesoGramos = double.tryParse(snapshot.value.toString()) ?? 0.0;
       double pesoKilogramos = pesoGramos / 1000;
-      return pesoKilogramos.toStringAsFixed(2); // Redondear a dos decimales
+      return pesoKilogramos.toStringAsFixed(2);
     } else {
       return 'Peso no encontrado';
     }

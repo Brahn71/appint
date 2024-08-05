@@ -1,7 +1,7 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 final String channelId = 'your_channel_id'; // Usar un ID único para el canal
@@ -79,7 +79,7 @@ class _RelojAlarmaState extends State<RelojAlarma> {
   Future<void> _activarAlarma() async {
     await actualizarLedBuz(true);
     _alarmaActiva = true; // Marcar la alarma como activa
-    await Future.delayed(const Duration(seconds: 5));
+    await Future.delayed(const Duration(seconds: 60));
     await actualizarLedBuz(false);
   }
 
@@ -181,50 +181,69 @@ class _RelojAlarmaState extends State<RelojAlarma> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Column(
-        children: <Widget>[
-          Expanded(
-            child: ListView.builder(
-              itemCount: alarmas.length,
-              itemBuilder: (context, index) {
-                final DateTime alarmaDateTime = DateTime.parse(alarmas[index]['time']);
-                final List<bool> diasSeleccionados = alarmas[index]['days'];
-
-                return ListTile(
-                  title: Text(_formattedTime(alarmaDateTime)),
-                  subtitle: Text('Días: ${_diasSeleccionadosToString(diasSeleccionados)}'),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.mode_edit_outline_outlined),
-                        onPressed: () {
-                          editarAlarma(index);
-                        },
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.delete),
-                        onPressed: () {
-                          eliminarAlarma(index);
-                        },
-                      ),
-                    ],
-                  ),
-                );
-              },
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: <Widget>[
+            ElevatedButton.icon(
+              onPressed: agregarAlarma,
+              icon: const Icon(Icons.add_alarm),
+              label: const Text('Agregar Alarma'),
+              style: ElevatedButton.styleFrom(
+                elevation: 5,
+                padding: const EdgeInsets.symmetric(vertical: 15.0, horizontal: 30.0),
+                textStyle: const TextStyle(fontSize: 16),
+              ),
             ),
-          ),
-          ElevatedButton(
-            onPressed: agregarAlarma,
-            child: const Text('Agregar Alarma'),
-          ),
-        ],
+            const SizedBox(height: 20),
+            Expanded(
+              child: alarmas.isEmpty
+                  ? const Center(child: Text('No hay alarmas. Agrega una alarma.'))
+                  : ListView.builder(
+                itemCount: alarmas.length,
+                itemBuilder: (context, index) {
+                  final DateTime alarmaDateTime = DateTime.parse(alarmas[index]['time']);
+                  final List<bool> diasSeleccionados = alarmas[index]['days'];
+
+                  return Card(
+                    elevation: 4,
+                    margin: const EdgeInsets.symmetric(vertical: 8.0),
+                    child: ListTile(
+                      title: Text(
+                        _formattedTime(alarmaDateTime),
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      subtitle: Text('Días: ${_diasSeleccionadosToString(diasSeleccionados)}'),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.edit),
+                            onPressed: () {
+                              editarAlarma(index);
+                            },
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.delete),
+                            onPressed: () {
+                              eliminarAlarma(index);
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   String _formattedTime(DateTime dateTime) {
-    return '${dateTime.hour}:${dateTime.minute}';
+    return '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
   }
 
   String _diasSeleccionadosToString(List<bool> diasSeleccionados) {
